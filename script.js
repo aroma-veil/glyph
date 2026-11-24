@@ -258,16 +258,70 @@
         });
     });
 
-    $("#symbolToggle").addEventListener("click", () => {
-        $("#symbolMenu").classList.toggle("open");
-        saveSelection();
+    const symbolToggle = $('#symbolToggle');
+    const symbolMenu = $('#symbolMenu');
+
+    // move the menu outside the editor and toolbar hierarchy
+    document.body.appendChild(symbolMenu);
+
+    function positionSymbolMenu() {
+        const rect = symbolToggle.getBoundingClientRect();
+        const menuWidth = Math.min(330, window.innerWidth - 24);
+        const menuHeight = Math.min(420, window.innerHeight - 24);
+
+        let left = rect.left;
+        let top = rect.bottom + 6;
+
+        // keep the menu inside the horizontal viewport
+        left = Math.max(12, Math.min(left, window.innerWidth - menuWidth - 12));
+
+        // open upwards if there isn't enough room below
+        if (top + menuHeight > window.innerHeight - 12) {
+            top = rect.top - menuHeight - 6;
+        }
+
+        // final vertical boundary check
+        top = Math.max(12, Math.min(top, window.innerHeight - menuHeight - 12));
+
+        symbolMenu.style.left = `${left}px`;
+        symbolMenu.style.top = `${top}px`;
+    }
+
+    symbolToggle.addEventListener('click', () => {
+        const isOpen = symbolMenu.classList.toggle('open');
+
+        symbolToggle.setAttribute('aria-expanded', String(isOpen));
+
+        if (isOpen) {
+            positionSymbolMenu();
+        }
+
+        saveRange();
     });
 
-    document.addEventListener("mousedown", event => {
-        if (!event.target.closest(".symbol-container")) {
-            $("#symbolMenu").classList.remove("open");
+    // close when clicking outside the button and menu
+    document.addEventListener('mousedown', event => {
+        if (
+            !symbolMenu.contains(event.target) &&
+            !symbolToggle.contains(event.target)
+        ) {
+            symbolMenu.classList.remove('open');
+            symbolToggle.setAttribute('aria-expanded', 'false');
         }
     });
+
+    // keep the menu anchored to the button
+    window.addEventListener('resize', () => {
+        if (symbolMenu.classList.contains('open')) {
+            positionSymbolMenu();
+        }
+    });
+
+    window.addEventListener('scroll', () => {
+        if (symbolMenu.classList.contains('open')) {
+            positionSymbolMenu();
+        }
+    }, true);
 
     /* --------------------------------------------------
        COMPONENT MODAL
