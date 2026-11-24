@@ -1,0 +1,272 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>glyph. | minecraft text editor</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="topbar">
+    <div class="brand">
+        <span class="brand-mark">◆</span>
+        <div>
+            <strong>Glyph</strong>
+            <small>minecraft text editor</small>
+        </div>
+    </div>
+
+    <div class="top-actions">
+        <select id="format">
+            <option value="modern">modern components</option>
+            <option value="legacy">legacy event names</option>
+        </select>
+        <button id="clear" class="quiet">clear</button>
+    </div>
+</header>
+
+<main>
+    <section class="intro">
+        <div>
+            <span class="eyebrow">text component workbench</span>
+            <h1>write the message. shape the component.</h1>
+            <p>format text, insert Minecraft components and inspect the generated JSON.</p>
+        </div>
+        <span id="status" class="status">ready</span>
+    </section>
+
+    <div class="workspace">
+
+        <div class="main-column">
+
+            <!-- EDITOR -->
+            <section class="panel">
+                <div class="panel-heading">
+                    <strong>EDITOR</strong>
+                    <span>select text to format</span>
+                </div>
+
+                <div class="panel-content">
+
+                    <div class="toolbar">
+
+                        <div class="tool-group">
+                            <button data-command="bold" title="Bold"><b>B</b></button>
+                            <button data-command="italic" title="Italic"><i>I</i></button>
+                            <button data-command="underline" title="Underline"><u>U</u></button>
+                            <button data-command="strikeThrough" title="Strikethrough"><s>S</s></button>
+                        </div>
+
+                        <div class="tool-group color-tools">
+                            <input type="color" id="textColor" value="#a7d7bd">
+                            <button id="applyColor">color</button>
+
+                            <select id="namedColor">
+                                <option value="">named color...</option>
+                                <option value="black">black</option>
+                                <option value="dark_blue">dark_blue</option>
+                                <option value="dark_green">dark_green</option>
+                                <option value="dark_aqua">dark_aqua</option>
+                                <option value="dark_red">dark_red</option>
+                                <option value="dark_purple">dark_purple</option>
+                                <option value="gold">gold</option>
+                                <option value="gray">gray</option>
+                                <option value="dark_gray">dark_gray</option>
+                                <option value="blue">blue</option>
+                                <option value="green">green</option>
+                                <option value="aqua">aqua</option>
+                                <option value="red">red</option>
+                                <option value="light_purple">light_purple</option>
+                                <option value="yellow">yellow</option>
+                                <option value="white">white</option>
+                            </select>
+                        </div>
+
+                        <div class="tool-group">
+                            <button id="obfuscate" title="Obfuscated">§k</button>
+                            <button id="resetStyle" title="Clear formatting">Tx</button>
+                        </div>
+
+                        <!-- SYMBOL PICKER -->
+                        <div class="tool-group symbol-container">
+                            <button id="symbolToggle">symbols ▾</button>
+
+                            <div id="symbolMenu" class="symbol-menu">
+
+                                <div class="symbol-category">
+                                    <label>ornaments</label>
+                                    <div class="symbol-grid" data-symbols="ornaments"></div>
+                                </div>
+
+                                <div class="symbol-category">
+                                    <label>bullets & shapes</label>
+                                    <div class="symbol-grid" data-symbols="shapes"></div>
+                                </div>
+
+                                <div class="symbol-category">
+                                    <label>arrows</label>
+                                    <div class="symbol-grid" data-symbols="arrows"></div>
+                                </div>
+
+                                <div class="symbol-category">
+                                    <label>card suits</label>
+                                    <div class="symbol-grid" data-symbols="cards"></div>
+                                </div>
+
+                                <div class="symbol-category">
+                                    <label>fantasy & tools</label>
+                                    <div class="symbol-grid" data-symbols="fantasy"></div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <!-- COMPONENT INSERTION -->
+                        <div class="tool-group">
+                            <select id="componentType">
+                                <option value="keybind">keybind</option>
+                                <option value="selector">selector</option>
+                                <option value="score">score</option>
+                                <option value="translate">translate</option>
+                                <option value="nbt">NBT</option>
+                            </select>
+
+                            <button id="insertComponent" class="primary">insert</button>
+                        </div>
+
+                    </div>
+
+                    <div
+                        id="editor"
+                        class="editor"
+                        contenteditable="true"
+                        spellcheck="false"
+                        data-placeholder="type your message here..."
+                    ></div>
+
+                    <p class="hint">
+                        Symbols are inserted as Unicode characters. Their appearance depends
+                        on Minecraft's font and version.
+                    </p>
+
+                </div>
+            </section>
+
+            <!-- PREVIEW -->
+            <section class="panel">
+                <div class="panel-heading">
+                    <strong>IN-GAME PREVIEW</strong>
+                    <span>approximate rendering</span>
+                </div>
+
+                <div class="panel-content">
+                    <div id="preview" class="preview"></div>
+                </div>
+            </section>
+
+            <!-- JSON -->
+            <section class="panel">
+                <div class="panel-heading">
+                    <strong>GENERATED JSON</strong>
+
+                    <div class="button-row">
+                        <button id="togglePretty">compact</button>
+                        <button id="copyJson">copy</button>
+                        <button id="copyCommand">copy /tellraw</button>
+                        <button id="downloadJson">download</button>
+                    </div>
+                </div>
+
+                <div class="panel-content">
+                    <pre id="jsonOutput" class="json-output"></pre>
+
+                    <p class="hint">
+                        The first array element is always <code>{"text":""}</code>.
+                    </p>
+                </div>
+            </section>
+
+        </div>
+
+        <!-- SIDEBAR -->
+        <aside class="side-column">
+
+            <section class="panel">
+                <div class="panel-heading">
+                    <strong>CUSTOM COLOR PALETTE</strong>
+                    <span>browser storage</span>
+                </div>
+
+                <div class="panel-content">
+
+                    <div id="palette" class="palette"></div>
+
+                    <div class="color-inputs">
+                        <input id="colorName" type="text" value="my color" placeholder="color name">
+                        <input id="colorHex" type="text" value="#a7d7bd" maxlength="7">
+                    </div>
+
+                    <div class="color-preview">
+                        <div id="colorPreview"></div>
+                        <code id="colorPreviewHex">#A7D7BD</code>
+                        <span>live preview</span>
+                    </div>
+
+                    <div class="palette-actions">
+                        <input id="paletteColor" type="color" value="#a7d7bd">
+                        <button id="addColor" class="primary">add color</button>
+                        <button id="exportPalette">export</button>
+                        <button id="importPalette">import</button>
+                        <input id="paletteFile" type="file" accept="application/json" hidden>
+                    </div>
+
+                    <p class="hint">
+                        Click a swatch to apply its color to the selected text.
+                    </p>
+
+                </div>
+            </section>
+
+            <section class="panel">
+                <div class="panel-heading">
+                    <strong>DOCUMENT</strong>
+                </div>
+
+                <div class="panel-content">
+                    <p class="document-info">
+                        Output format: JSON component array.
+                    </p>
+
+                    <div class="button-row">
+                        <button id="undo">undo</button>
+                        <button id="redo">redo</button>
+                        <button id="selectAll">select all</button>
+                    </div>
+                </div>
+            </section>
+
+        </aside>
+
+    </div>
+</main>
+
+<!-- COMPONENT MODAL -->
+<div id="modalBackdrop" class="modal-backdrop">
+    <div class="modal">
+        <h2 id="modalTitle">Insert component</h2>
+        <p id="modalDescription">Configure the component.</p>
+
+        <div id="modalFields" class="modal-fields"></div>
+
+        <div class="modal-actions">
+            <button id="cancelModal">cancel</button>
+            <button id="confirmModal" class="primary">insert component</button>
+        </div>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
