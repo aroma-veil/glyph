@@ -343,11 +343,6 @@ main {
     cursor: pointer;
 }
 
-.editor [data-token]::after {
-    content: " ·";
-    color: #8cb69d;
-}
-
 .hint {
     color: var(--muted);
     font-size: 10px;
