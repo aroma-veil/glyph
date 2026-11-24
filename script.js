@@ -2,6 +2,32 @@
 (() => {
     "use strict";
 
+    function insertChipAtCursor(chip) {
+        const selection = window.getSelection();
+
+        if (!selection || !selection.rangeCount) {
+            editor.appendChild(chip);
+        } else {
+            const range = selection.getRangeAt(0);
+            range.deleteContents();
+            range.insertNode(chip);
+        }
+
+        // always create an editable text node after the chip
+        const spacer = document.createTextNode('\u200B');
+        chip.after(spacer);
+
+        // move the caret into the new text node
+        const range = document.createRange();
+        range.setStart(spacer, 1);
+        range.collapse(true);
+
+        selection.removeAllRanges();
+        selection.addRange(range);
+
+        editor.focus();
+    }
+
     const $ = selector => document.querySelector(selector);
 
     const editor = $("#editor");
@@ -565,7 +591,7 @@
             }
 
             range.deleteContents();
-            range.insertNode(chip);
+            insertChipAtCursor(chip);
 
             const spacer = document.createTextNode("\u00a0");
 
