@@ -109,30 +109,51 @@
        EDITOR SELECTION
     -------------------------------------------------- */
 
-    function saveSelection() {
-        const selection = window.getSelection();
+function saveSelection() {
+    const selection = window.getSelection();
 
-        if (
-            selection.rangeCount &&
-            editor.contains(selection.anchorNode)
-        ) {
-            savedRange = selection.getRangeAt(0).cloneRange();
-        }
+    if (
+        selection &&
+        selection.rangeCount &&
+        editor.contains(selection.anchorNode) &&
+        editor.contains(selection.focusNode)
+    ) {
+        savedRange = selection.getRangeAt(0).cloneRange();
+    }
+}
+
+function restoreSelection() {
+    if (!savedRange) return false;
+
+    // Make sure the saved range still belongs to the editor.
+    if (
+        !editor.contains(savedRange.startContainer) ||
+        !editor.contains(savedRange.endContainer)
+    ) {
+        savedRange = null;
+        return false;
     }
 
-    function restoreSelection() {
-        if (!savedRange) return;
+    const selection = window.getSelection();
 
-        const selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(savedRange);
 
-        selection.removeAllRanges();
-        selection.addRange(savedRange);
-    }
+    return true;
+}
 
-    function focusEditor() {
-        editor.focus();
-        restoreSelection();
-    }
+function focusEditor() {
+    editor.focus();
+    restoreSelection();
+}
+
+// Keep track of selections even when the user interacts
+// with controls outside the editor.
+document.addEventListener("selectionchange", saveSelection);
+
+editor.addEventListener("mouseup", saveSelection);
+editor.addEventListener("keyup", saveSelection);
+editor.addEventListener("touchend", saveSelection);
 
     function insertText(text) {
         focusEditor();
@@ -182,40 +203,36 @@
     }
 
     
+
 function applyColor(color) {
+    if (!color) return;
+
     focusEditor();
 
     const selection = window.getSelection();
 
-    if (!selection || !selection.rangeCount) {
-        return;
-    }
+    if (!selection || !selection.rangeCount) return;
 
     const range = selection.getRangeAt(0);
 
-    if (!editor.contains(range.commonAncestorContainer)) {
+    if (
+        !editor.contains(range.startContainer) ||
+        !editor.contains(range.endContainer)
+    ) {
         return;
     }
 
-    // no selected text: use the browser's formatting command
-    // to set the color for subsequently typed text
     if (range.collapsed) {
-        document.execCommand("styleWithCSS", false, true);
-        document.execCommand("foreColor", false, color);
-
-        saveSelection();
-        changed();
         return;
     }
 
-    // wrap selected content in an explicitly colored span
     const span = document.createElement("span");
     span.style.color = color;
 
     span.appendChild(range.extractContents());
     range.insertNode(span);
 
-    // keep the newly colored text selected
+    // Restore the selection around the newly colored text.
     const newRange = document.createRange();
     newRange.selectNodeContents(span);
 
@@ -226,21 +243,28 @@ function applyColor(color) {
     changed();
 }
 
+// Save the selection BEFORE the native color picker takes focus.
+$("#textColor").addEventListener("pointerdown", saveSelection);
+$("#textColor").addEventListener("mousedown", saveSelection);
+$("#textColor").addEventListener("touchstart", saveSelection);
+
+$("#textColor").addEventListener("change", event => {
+    applyColor(event.target.value);
+});
+
+$("#namedColor").addEventListener("pointerdown", saveSelection);
+
+$("#namedColor").addEventListener("change", event => {
+    if (event.target.value) {
+        applyColor(event.target.value);
+        event.target.value = "";
+    }
+});
+
     document.querySelectorAll("[data-command]").forEach(button => {
         button.addEventListener("click", () => {
             applyCommand(button.dataset.command);
         });
-    });
-
-    $("#textColor").addEventListener("change", event => {
-        applyColor(event.target.value);
-    });
-    
-    $("#namedColor").addEventListener("change", event => {
-        if (event.target.value) {
-            applyColor(event.target.value);
-            event.target.value = "";
-        }
     });
 
     $("#resetStyle").addEventListener("click", () => {
