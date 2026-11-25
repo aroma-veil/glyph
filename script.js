@@ -181,23 +181,50 @@
         changed();
     }
 
-    function applyColor(color) {
-        focusEditor();
+    
+function applyColor(color) {
+    focusEditor();
 
-        document.execCommand(
-            "styleWithCSS",
-            false,
-            true
-        );
+    const selection = window.getSelection();
 
-        document.execCommand(
-            "foreColor",
-            false,
-            color
-        );
-
-        changed();
+    if (!selection || !selection.rangeCount) {
+        return;
     }
+
+    const range = selection.getRangeAt(0);
+
+    if (!editor.contains(range.commonAncestorContainer)) {
+        return;
+    }
+
+    // no selected text: use the browser's formatting command
+    // to set the color for subsequently typed text
+    if (range.collapsed) {
+        document.execCommand("styleWithCSS", false, true);
+        document.execCommand("foreColor", false, color);
+
+        saveSelection();
+        changed();
+        return;
+    }
+
+    // wrap selected content in an explicitly colored span
+    const span = document.createElement("span");
+    span.style.color = color;
+
+    span.appendChild(range.extractContents());
+    range.insertNode(span);
+
+    // keep the newly colored text selected
+    const newRange = document.createRange();
+    newRange.selectNodeContents(span);
+
+    selection.removeAllRanges();
+    selection.addRange(newRange);
+
+    saveSelection();
+    changed();
+}
 
     document.querySelectorAll("[data-command]").forEach(button => {
         button.addEventListener("click", () => {
