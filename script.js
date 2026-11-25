@@ -205,6 +205,10 @@
         });
     });
 
+    $("#textColor").addEventListener("change", event => {
+        applyColor(event.target.value);
+    });
+    
     $("#namedColor").addEventListener("change", event => {
         if (event.target.value) {
             applyColor(event.target.value);
